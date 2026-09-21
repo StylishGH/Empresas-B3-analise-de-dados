@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.png" width="130" alt="Logo Guilherme">
+</p>
+
 # 📊 B3 Analytics & Machine Learning (2021-2025)
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://ghmendes.streamlit.app)
@@ -156,4 +160,8 @@ Construí uma aplicação web completa e interativa em Streamlit contendo:
 ---
 
 ## 👤 Autor
-Desenvolvido por **Guilherme** ([@StylishGH](https://github.com/StylishGH)).
+
+<p align="left">
+  <img src="assets/logo.png" width="45" style="vertical-align: middle; margin-right: 10px;">
+  <b>Desenvolvido por Guilherme</b> (<a href="https://github.com/StylishGH">@StylishGH</a>)
+</p>

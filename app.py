@@ -8,12 +8,16 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 
+import os
+
 # ==============================================================================
 # CONFIGURAÇÃO DA PÁGINA
 # ==============================================================================
+favicon = "assets/logo.png" if os.path.exists("assets/logo.png") else "📈"
+
 st.set_page_config(
     page_title="B3 Analytics & Machine Learning",
-    page_icon="📈",
+    page_icon=favicon,
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -134,6 +138,9 @@ modelo_roe, modelo_acao, features_ml = treinar_modelos(df_completo)
 # ==============================================================================
 # BARRA LATERAL (FILTROS)
 # ==============================================================================
+if os.path.exists("assets/logo.png"):
+    st.sidebar.image("assets/logo.png", width=120)
+
 st.sidebar.title("🔍 Filtros de Análise")
 
 # Filtro de Setor
