@@ -253,6 +253,7 @@ with tab1:
     )
     
     st.plotly_chart(fig_hist, use_container_width=True)
+    st.caption("ℹ️ **Nota sobre as cotações:** Os preços históricos são ajustados por proventos (dividendos e desdobramentos), refletindo o fechamento de cada exercício contábil anual (2021 a 2025). Por isso, ações com altos dividendos distribuídos (como Petrobras) apresentam preço histórico ajustado diferente da cotação nominal de tela de 2026.")
     
     # Tabela detalhada
     with st.expander("Ver Tabela de Dados Históricos"):

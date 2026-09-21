@@ -62,6 +62,9 @@ graph TD
 * **O Susto do Ano de 2025 (Falso Bug):**
   * *O que aconteceu:* Linhas com lucros e ROEs negativos gigantes (Usiminas -R$ 5.8 Bi, CSN -R$ 6.0 Bi, Hapvida, Auren) pareceram erros de código.
   * *O aprendizado:* Não era bug! Eram os prejuízos reais reportados pelo setor siderúrgico e elétrico em 2024/2025. Dados financeiros têm quedas bruscas reais.
+* **Cotação Ajustada por Proventos vs Preço Nominal de Tela:**
+  * *A dúvida comum:* Ao comparar a cotação da Petrobras no dashboard (R$ 28,98 em 2025) com a cotação de tela no Google Finance em 2026 (R$ 48,50), surge a dúvida de por que os valores são diferentes.
+  * *A explicação financeira:* Na análise quantitativa profissional, utiliza-se a **cotação ajustada** (*Adjusted Close* do Yahoo Finance), que desconta os proventos distribuídos (a Petrobras distribuiu mais de R$ 200 bilhões em dividendos no período) para calcular o retorno real do investidor, além de refletir o fechamento de cada exercício contábil anual (2021 a 2025).
 
 ---
 
