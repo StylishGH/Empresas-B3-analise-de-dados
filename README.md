@@ -34,6 +34,33 @@ python -m streamlit run app.py
 
 ---
 
+## 💡 Conhecimento para os Leigos (Guia Descomplicado)
+
+Se você não é da área de Finanças nem de Ciência de Dados, não se preocupe! Eu preparei este guia rápido para você entender os conceitos deste projeto sem jargões difíceis:
+
+### 1. O Básico do Mercado Financeiro
+* **B3 & CVM:** A **B3** é a Bolsa de Valores do Brasil (o "mercado" onde compramos e vendemos pedacinhos de empresas, chamados de ações). A **CVM** é o órgão do governo que fiscaliza tudo e obriga as empresas a publicarem balanços contábeis detalhados todos os anos.
+* **Lucro Líquido vs Patrimônio Líquido:**
+  * *Lucro Líquido:* É o dinheiro limpo que sobrou no caixa da empresa no fim do ano, depois de pagar funcionários, impostos, fornecedores e juros de dívidas.
+  * *Patrimônio Líquido (PL):* É a riqueza real da empresa pertencente aos acionistas (todos os bens, fábricas e imóveis menos todas as dívidas que ela deve).
+* **O Famoso ROE (Return on Equity):**
+  * É a **taxa de rentabilidade** do negócio. Pense assim: se você abre uma padaria com **R$ 100 mil** do seu bolso (Patrimônio) e no final do ano ela te dá **R$ 20 mil** de lucro limpo, o seu ROE foi de **20% ao ano**. Quanto maior o ROE, mais eficiente a empresa é em multiplicar o dinheiro investido!
+* **A Selic e a "Maré" da Bolsa:**
+  * A **Taxa Selic** é a taxa básica de juros do Brasil. Quando a Selic está muito alta (ex: 13,75% a.a.), qualquer pessoa ganha dinheiro seguro na Renda Fixa (Tesouro Direto) sem correr risco na Bolsa. Além disso, as empresas pagam juros maiores nas suas dívidas. Por isso, quando o juro sobe, a Bolsa costuma cair; quando o juro cai, a Bolsa costuma disparar!
+
+### 2. O Básico de Ciência de Dados & Inteligência Artificial
+* **K-Means (Agrupamento / Clusters):**
+  * Imagine que você tem uma cesta cheia de frutas misturadas e pede para um computador separá-las em grupos parecidos sem falar o nome de nenhuma fruta. O algoritmo vai olhar peso, cor e tamanho e agrupar laranjas com laranjas e melancias com melancias. No projeto, o K-Means agrupou as 51 empresas da B3 em 4 "famílias" com base na rentabilidade e comportamento financeiro.
+* **Random Forest (Floresta Aleatória):**
+  * Em vez de confiar na opinião de apenas uma pessoa, o algoritmo cria centenas de "árvores de decisão" (fluxogramas de perguntas: *"O juro subiu? O lucro cresceu? A empresa é do setor elétrico?"*). Cada árvore dá o seu voto, e a decisão final é a escolha da maioria (uma votação democrática de inteligências!).
+* **Os 4 Quadrantes de Decisão (A Matriz do Projeto):**
+  * 🟢 **Crescente:** A empresa melhora sua rentabilidade (ROE sobe) e o preço da ação acompanha e sobe junto (o melhor cenário!).
+  * 🔵 **Oportunidade:** A empresa está mais lucrativa e eficiente, mas a ação caiu por pessimismo passageiro do mercado (potencial pechincha!).
+  * 🟡 **Especulação:** A ação sobe mesmo com a empresa piorando seus lucros (cenário arriscado / euforia de mercado).
+  * 🔴 **Decrescente:** A empresa piorou os resultados e a ação despencou junto (cenário de cautela / fuga).
+
+---
+
 ## 📖 Meu Diário de Bordo & Retrospectiva do Projeto
 
 Desenvolver este projeto não foi uma linha reta. Tive ideias que deram errado, cometi erros de iniciante, me deparei com bizarrices nos dados públicos e precisei pivotar várias vezes até chegar na solução ideal. Aqui está o resumo dessa jornada:
