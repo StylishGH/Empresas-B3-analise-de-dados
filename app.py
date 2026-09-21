@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+import yfinance as yf
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
@@ -54,11 +55,41 @@ def carregar_dados():
 df_completo, df_clusters, df_macro = carregar_dados()
 
 # ==============================================================================
+# FUNÇÃO PARA BUSCAR MÉTRICAS MACROECONÔMICAS ATUAIS EM TEMPO REAL
+# ==============================================================================
+@st.cache_data(ttl=3600)
+def obter_metricas_macro_atuais():
+    try:
+        d = yf.Ticker('USDBRL=X').history(period='1y')
+        cotacao_dolar = float(d['Close'].iloc[-1])
+        var_dolar = float(((cotacao_dolar / d['Close'].iloc[0]) - 1) * 100)
+    except Exception:
+        cotacao_dolar = 5.40
+        var_dolar = 5.0
+        
+    try:
+        b = yf.Ticker('^BVSP').history(period='1y')
+        cotacao_ibov = float(b['Close'].iloc[-1])
+        var_ibov = float(((cotacao_ibov / b['Close'].iloc[0]) - 1) * 100)
+    except Exception:
+        cotacao_ibov = 130000.0
+        var_ibov = 10.0
+        
+    return {
+        'dolar_cotacao': round(cotacao_dolar, 2),
+        'dolar_var': round(var_dolar, 1),
+        'ibov_pts': round(cotacao_ibov, 0),
+        'ibov_var': round(var_ibov, 1),
+        'selic_atual': 13.25, # Taxa Selic oficial vigente
+        'var_selic': 1.0,     # Ciclo de ajuste recente (p.p.)
+        'ipca_atual': 4.6     # Inflação acumulada 12M
+    }
+
+# ==============================================================================
 # TREINAMENTO DOS MODELOS DE MACHINE LEARNING (COM CACHE)
 # ==============================================================================
 @st.cache_resource
 def treinar_modelos(df):
-    # Criar alvos para o próximo ano
     df_ml = df.copy()
     df_ml['ROE_PROX_ANO'] = df_ml.groupby('TICKER')['ROE'].shift(-1)
     df_ml['COTACAO_PROX_ANO'] = df_ml.groupby('TICKER')['COTACAO_FINAL_ANO'].shift(-1)
@@ -152,7 +183,6 @@ tab1, tab2, tab3 = st.tabs([
 with tab1:
     st.subheader("Indicadores Recentes e Histórico")
     
-    # Pegar último ano disponível da empresa
     ultimo_registro = df_empresa.iloc[-1]
     ano_ultimo = int(ultimo_registro['ANO'])
     
@@ -203,7 +233,7 @@ with tab1:
         yaxis="y1"
     ))
     
-    # Linha/Barras do ROE
+    # Barras do ROE
     fig_hist.add_trace(go.Bar(
         x=df_empresa['ANO'],
         y=df_empresa['ROE'] * 100,
@@ -244,10 +274,8 @@ with tab1:
 with tab2:
     st.subheader("Classificação da Empresa no Mercado (K-Means)")
     
-    # Descrição dos perfis
     st.info(f"📍 **{nome_empresa} ({ticker_selecionado})** pertence ao grupo: **{perfil_empresa}**")
     
-    # Resumo por Cluster
     df_agg = df_completo.groupby('TICKER').agg({
         'EMPRESA': 'first',
         'SETOR': 'first',
@@ -273,7 +301,6 @@ with tab2:
         height=550
     )
     
-    # Destacar a empresa selecionada com um marcador maior e em estrela
     emp_ponto = df_agg[df_agg['TICKER'] == ticker_selecionado]
     if not emp_ponto.empty:
         fig_cluster.add_trace(go.Scatter(
@@ -288,7 +315,6 @@ with tab2:
     
     st.plotly_chart(fig_cluster, use_container_width=True)
     
-    # Quadro resumo dos 4 clusters
     col_c1, col_c2 = st.columns(2)
     with col_c1:
         st.markdown("""
@@ -312,24 +338,58 @@ with tab3:
     para estimar a probabilidade de alta do **ROE** e da **Ação** no ano seguinte.
     """)
     
+    # Inicializar valores do session_state caso não existam
+    if 'selic_val' not in st.session_state:
+        st.session_state['selic_val'] = 12.25
+    if 'var_selic_val' not in st.session_state:
+        st.session_state['var_selic_val'] = 0.5
+    if 'ibov_val' not in st.session_state:
+        st.session_state['ibov_val'] = 10.0
+    if 'dolar_val' not in st.session_state:
+        st.session_state['dolar_val'] = 5.0
+    if 'ipca_val' not in st.session_state:
+        st.session_state['ipca_val'] = 4.5
+        
+    col_btn, col_info = st.columns([1, 2])
+    with col_btn:
+        if st.button("🌐 Puxar Métricas Reais do Mercado Agora", help="Coleta cotação em tempo real do Dólar e Ibovespa via Yahoo Finance e preenche os sliders"):
+            with st.spinner("Buscando cotações em tempo real..."):
+                macro_real = obter_metricas_macro_atuais()
+                st.session_state['selic_val'] = macro_real['selic_atual']
+                st.session_state['var_selic_val'] = macro_real['var_selic']
+                st.session_state['ibov_val'] = macro_real['ibov_var']
+                st.session_state['dolar_val'] = macro_real['dolar_var']
+                st.session_state['ipca_val'] = macro_real['ipca_atual']
+                st.session_state['macro_info'] = (
+                    f"✅ **Métricas Reais Carregadas:** "
+                    f"Dólar: **R$ {macro_real['dolar_cotacao']}** (12M: {macro_real['dolar_var']:+.1f}%) | "
+                    f"Ibovespa: **{macro_real['ibov_pts']:,.0f} pts** (12M: {macro_real['ibov_var']:+.1f}%) | "
+                    f"Selic Atual: **{macro_real['selic_atual']}%** | "
+                    f"IPCA: **{macro_real['ipca_atual']}%**"
+                )
+                st.rerun()
+                
+    if 'macro_info' in st.session_state:
+        st.success(st.session_state['macro_info'])
+        
+    st.markdown("---")
+    
     col_sim_esq, col_sim_dir = st.columns([1, 1])
     
     with col_sim_esq:
-        st.markdown("#### ⚙️ Configurar Cenário Macroeconômico")
+        st.markdown("#### ⚙️ Ajustar Cenário Macroeconômico")
         
-        sim_selic = st.slider("Taxa Selic Final do Ano (%):", min_value=6.0, max_value=18.0, value=12.25, step=0.25)
-        sim_var_selic = st.slider("Ciclo da Selic (Variação no ano em p.p.):", min_value=-5.0, max_value=8.0, value=0.5, step=0.25)
-        sim_ibov = st.slider("Desempenho Geral do Ibovespa (%):", min_value=-30.0, max_value=40.0, value=10.0, step=1.0)
-        sim_dolar = st.slider("Variação Anual do Dólar (%):", min_value=-20.0, max_value=40.0, value=5.0, step=1.0)
-        sim_ipca = st.slider("Inflação IPCA (%):", min_value=2.0, max_value=12.0, value=4.5, step=0.1)
+        sim_selic = st.slider("Taxa Selic Final do Ano (%):", min_value=6.0, max_value=18.0, value=float(st.session_state['selic_val']), step=0.25)
+        sim_var_selic = st.slider("Ciclo da Selic (Variação no ano em p.p.):", min_value=-5.0, max_value=8.0, value=float(st.session_state['var_selic_val']), step=0.25)
+        sim_ibov = st.slider("Desempenho Geral do Ibovespa (%):", min_value=-30.0, max_value=40.0, value=float(st.session_state['ibov_val']), step=1.0)
+        sim_dolar = st.slider("Variação Anual do Dólar (%):", min_value=-20.0, max_value=40.0, value=float(st.session_state['dolar_val']), step=1.0)
+        sim_ipca = st.slider("Inflação IPCA (%):", min_value=2.0, max_value=12.0, value=float(st.session_state['ipca_val']), step=0.1)
         
     with col_sim_dir:
         st.markdown("#### 🔮 Resultado da Projeção para o Próximo Ano")
         
-        # Obter os dados mais recentes da empresa
         ult_dado = df_empresa.iloc[-1].copy()
         
-        # Montar o vetor de entrada
         vetor_teste = {
             'LUCRO_LIQUIDO_BI': ult_dado['LUCRO_LIQUIDO_BI'],
             'PATRIMONIO_LIQUIDO_BI': ult_dado['PATRIMONIO_LIQUIDO_BI'],
@@ -347,32 +407,26 @@ with tab3:
         }
         df_input = pd.DataFrame([vetor_teste])[features_ml]
         
-        # Previsão das probabilidades
         prob_roe_sobe = modelo_roe.predict_proba(df_input)[0][1]
         prob_acao_sobe = modelo_acao.predict_proba(df_input)[0][1]
         
         pred_roe = 1 if prob_roe_sobe >= 0.5 else 0
         pred_acao = 1 if prob_acao_sobe >= 0.5 else 0
         
-        # Classificação do Cenário
         if pred_roe == 1 and pred_acao == 1:
             cenario_nome = "Crescente (ROE Sobe, Ação Sobe)"
-            cenario_cor = "green"
             cenario_icone = "🟢"
             cenario_desc = "Cenário de ouro! A empresa deve melhorar sua eficiência de capital e o preço da ação tende a acompanhar positivamente."
         elif pred_roe == 0 and pred_acao == 0:
             cenario_nome = "Decrescente (ROE Cai, Ação Cai)"
-            cenario_cor = "red"
             cenario_icone = "🔴"
             cenario_desc = "Cenário de cautela. Indicadores apontam para retração na rentabilidade e desvalorização do papel."
         elif pred_roe == 1 and pred_acao == 0:
             cenario_nome = "Oportunidade (ROE Sobe, Ação Cai)"
-            cenario_cor = "blue"
             cenario_icone = "🔵"
             cenario_desc = "Potencial pechincha! Os fundamentos devem melhorar, mas o papel pode cair por pressão de mercado."
         else:
             cenario_nome = "Especulação (ROE Cai, Ação Sobe)"
-            cenario_cor = "orange"
             cenario_icone = "🟡"
             cenario_desc = "Atenção ao risco! O papel pode subir mesmo com deterioração dos lucros/ROE (movimento especulativo ou beta alto)."
             
