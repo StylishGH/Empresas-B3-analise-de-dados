@@ -2,3 +2,5 @@ data/raw/
 data/processed/*.db
 .venv/
 __pycache__/
+ROADMAP.md
+.vscode/
