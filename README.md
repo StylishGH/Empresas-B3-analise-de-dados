@@ -1,3 +1,7 @@
+<p align="right">
+  <b>🇧🇷 Versão em Português</b> &nbsp;|&nbsp; <a href="./README.en.md">🇺🇸 English Version</a>
+</p>
+
 <p align="center">
   <img src="assets/logo.png" width="130" alt="Logo Guilherme">
 </p>
