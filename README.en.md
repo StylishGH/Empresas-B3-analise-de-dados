@@ -9,10 +9,12 @@
 # 📊 B3 Analytics & Machine Learning (2021–2025)
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://ghmendes.streamlit.app)
+[![CI](https://github.com/StylishGH/Empresas-B3-analise-de-dados/actions/workflows/ci.yml/badge.svg)](https://github.com/StylishGH/Empresas-B3-analise-de-dados/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/Python-3.14-blue.svg)
 ![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-Machine%20Learning-orange.svg)
 ![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard%20Web-FF4B4B.svg)
 ![Plotly](https://img.shields.io/badge/Plotly-Interactive-3F4F75.svg)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 > **End-to-End Financial Data Science & Machine Learning Case Study:** From regulatory CVM accounting statement ingestion and market data enrichment via Yahoo Finance, through unsupervised economic clustering (K-Means), dual-stage supervised predictive modeling augmented by macroeconomic covariates (Random Forest), to cloud deployment on an interactive Streamlit web dashboard.
 

@@ -9,10 +9,12 @@
 # 📊 B3 Analytics & Machine Learning (2021-2025)
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://ghmendes.streamlit.app)
+[![CI](https://github.com/StylishGH/Empresas-B3-analise-de-dados/actions/workflows/ci.yml/badge.svg)](https://github.com/StylishGH/Empresas-B3-analise-de-dados/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/Python-3.14-blue.svg)
 ![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-Machine%20Learning-orange.svg)
 ![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard%20Web-FF4B4B.svg)
 ![Plotly](https://img.shields.io/badge/Plotly-Interactive-3F4F75.svg)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 > **Meu case completo de Ciência de Dados Financeiros:** Da coleta e saneamento de balanços da CVM ao cruzamento com cotações históricas da B3 (Yahoo Finance), agrupamento não supervisionado (K-Means), modelagem preditiva supervisionada com contexto macroeconômico (Random Forest) e deploy em um dashboard web interativo no Streamlit.
 
