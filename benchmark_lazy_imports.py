@@ -97,3 +97,4 @@ p3 = subprocess.run([sys.executable, "-X", "lazy_imports=all", "-c", code_global
 print(p3.stdout.strip())
 
 print("\n" + "=" * 65)
+
