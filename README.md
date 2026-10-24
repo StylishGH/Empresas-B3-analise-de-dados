@@ -40,6 +40,29 @@ python -m streamlit run app.py
 
 ---
 
+## 📊 Metabase — dashboards sobre os mesmos dados
+
+Além do Streamlit, eu montei os mesmos indicadores no **Metabase**, a ferramenta
+de dashboards do dia a dia em vagas de Data Analyst: o dashboard
+**"B3 — Visão geral (2021–2025)"**, com 4 perguntas em SQL sobre o banco
+PostgreSQL carregado dos CSVs de `data/processed` (215 empresa-anos, 48
+clusters, 384 linhas de ROE).
+
+![Dashboard B3 no Metabase](metabase/dashboard-b3.png)
+
+* **ROE médio por ano (2021–2025):** cai de 0,45 para 0,34, com pico de 0,51 em 2022.
+* **ROE médio por cluster:** o Cluster 1 (Titãs da Bolsa, PETR4/VALE3) lidera com folga.
+* **Top 10 empresas por ROE em 2024:** ENGIE no topo, seguida de VIBRA e CPFL.
+* **Lucro líquido total por setor:** Petróleo e Gás e Extração Mineral dominam o período.
+
+As perguntas, o SQL de cada uma, o print e o passo a passo para reproduzir
+estão em [`metabase/`](metabase/). Nota honesta: a instância usada para o print
+era local, então o link público do Metabase local não é permanente — a prova
+durável é o print, as perguntas documentadas e o script de carga.
+
+
+---
+
 ## 💡 Conhecimento para os Leigos (Guia Descomplicado)
 
 Se você não é da área de Finanças nem de Ciência de Dados, não se preocupe! Eu preparei este guia rápido para você entender os conceitos deste projeto sem jargões difíceis:
