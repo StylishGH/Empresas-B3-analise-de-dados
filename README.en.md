@@ -99,6 +99,12 @@ graph TD
 * **Volatile Accounting Account Identifiers (`CD_CONTA`):**
   * *Phenomenon:* Relying on regulatory account codes (`CD_CONTA 2.03`) failed because classifications varied across corporate sectors (mapping to "Provisions" for some issuers and "Operating Liabilities" for others).
   * *Remediation:* Refactored extraction pipelines to match canonical standard accounting labels (`DS_CONTA == 'Patrimônio Líquido Consolidado'`).
+* **The Duplicated Profit Bug (Engie's phantom 189% ROE):**
+  * *Phenomenon:* While reviewing the data, Engie (`EGIE3`) showed up in 2024 with a 189% ROE. Its profit in the table was R$ 23.2 bi — above the company's yearly revenue. That made no sense.
+  * *Root Cause:* In notebook 01 I summed the income statement with no filters, and two problems stacked. First: each CVM file carries the current year (`ORDEM_EXERC == 'ÚLTIMO'`) and the previous year as comparative (`'PENÚLTIMO'`) — and I summed both. Second: the company registry I used to bring in the sector had duplicated `CD_CVM` codes (107 companies duplicated, Petrobras among them), so the merge doubled those companies' rows. Combined, Petrobras showed R$ 592 bi of profit in 2022 versus the real R$ 188 bi — the table value matched almost exactly 2 × (year + previous year).
+  * *The damage:* Since equity (notebook 02) was already right — it filtered `'ÚLTIMO'` and did no registry merge — ROE came out inflated 2× to 9× depending on the year, polluting ROE rankings, sector averages, clusters and model features.
+  * *Remediation:* Notebook 01 now drops duplicated `CD_CVM` codes from the registry before merging, filters `'ÚLTIMO'` only, keeps the highest `VERSAO` per company/year as a safeguard and standardizes scale via `ESCALA_MOEDA` before summing (which also retired the manual `/1000` patch for Vivara and Metisa in 06). Notebook 02 got the same version dedup and scale standardization. Notebook 06 now computes equity in billions correctly, excludes holding companies from ticker mapping (SUZANO HOLDING was standing in for SUZANO S.A. under `SUZB3`) and reads prices from a frozen csv instead of Yahoo on every run. Values now match reported financials.
+  * *Still open:* Model accuracies (82.76% and 62.07%) were measured with a random split on panel data and will be re-evaluated with a temporal split; the Metabase dashboard also needs a refresh on the corrected data.
 * **Dividend-Adjusted Returns vs. Raw Terminal Screen Quotes:**
   * Explored pricing divergence between raw terminal closes (e.g., Petrobras around R$ 48 in 2026) vs historical adjusted series (R$ 28.98 at 2025 year-end). Reconciled calculations by grounding returns strictly in total shareholder return (TSR) adjustments, properly factoring the R$ 200+ billion in cash dividends distributed over the holding horizon.
 
@@ -112,10 +118,10 @@ graph TD
 #### 💡 Methodological Shift:
 * *Initial Approach:* Clustering cross-sectional annual snapshots independently resulted in high cluster switching noise, where identical corporations leaped between clusters annually.
 * *Production Solution:* Calculated multi-year corporate performance centroid embeddings via `df_empresa.groupby('TICKER')`, extracting 4 consistent corporate regimes:
-  * **Cluster 0 (Solid Blue Chips / Financial Institutions):** Predictable recurring cash generation, median ROE ~27%, average equity appreciation +23% annualized (e.g., Banco do Brasil, Bradesco, Santander, Vivara).
-  * **Cluster 1 (Macro Commodities Titans):** Petrobras and Vale — capital expenditure and earnings on an order of magnitude exceeding all peers (tens of billions in net earnings).
-  * **Cluster 2 (High Capital Efficiency Champions):** Superior compounding capabilities (WEG, Ambev, Sabesp) exhibiting median ROE ~79% and annual equity return of +17%.
-  * **Cluster 3 (Distressed / Operational Turnarounds):** Structurally compressed margins and high leverage (Magalu, Hapvida, Cosan), averaging -19% annual returns.
+  * **Cluster 0 (Solid Blue Chips / Financial Institutions):** Banks, Ambev and Vale, average ROE ~16% and average equity appreciation +16% annualized.
+  * **Cluster 1 (Solid Risers):** The large group, 26 companies, average ROE ~18% and annual return of +23%.
+  * **Cluster 2 (Distressed / Retail and Debt):** Nearly zero profitability (ROE ~1%) and average annual return of -15% (Magalu, Hapvida, Cosan, steelmakers).
+  * **Cluster 3 (Lone Titan):** Petrobras alone, average earnings of R$ 115 bi, ROE ~30% and annual return of +37%.
 
 ---
 
@@ -181,7 +187,7 @@ graph TD
 
 ## 🛠️ Technology Stack
 
-* **Programming Language:** Python 3.14
+* **Programming Language:** Python 3.12
 * **Data Processing & Analytics:** Pandas, NumPy, SQLite
 * **Visualization & Dashboarding:** Streamlit Cloud, Plotly Express & Graph Objects, Matplotlib, Seaborn
 * **Machine Learning & Modeling:** Scikit-Learn (Pipelines, StandardScaler, KMeans, RandomForestClassifier, Metrics)

@@ -48,6 +48,10 @@ de dashboards do dia a dia em vagas de Data Analyst: o dashboard
 PostgreSQL carregado dos CSVs de `data/processed` (215 empresa-anos, 48
 clusters, 384 linhas de ROE).
 
+⚠️ Os números e o print abaixo são da base anterior à correção do lucro
+duplicado (ver o diário de bordo) — o dashboard precisa de refresh com os
+CSVs novos.
+
 ![Dashboard B3 no Metabase](metabase/dashboard-b3.png)
 
 * **ROE médio por ano (2021–2025):** cai de 0,45 para 0,34, com pico de 0,51 em 2022.
@@ -127,6 +131,12 @@ graph TD
 * **O Susto que Tomei com o Ano de 2025 (Achei que era Bug Meu):**
   * *O que aconteceu:* No final da base, vi prejuízos gigantescos (Usiminas com -R$ 5.8 Bi, CSN com -R$ 6.0 Bi, Hapvida, Auren). Na hora achei que tinha quebrado o código.
   * *O que aprendi:* Não era bug! Eram os prejuízos reais reportados pelos setores siderúrgico e elétrico em 2024/2025. Dados financeiros reais têm quedas bruscas.
+* **O Bug do Lucro Duplicado (o ROE de 189% da Engie que não existia):**
+  * *O que aconteceu:* Revendo a base, achei estranho a Engie (`EGIE3`) aparecer em 2024 com ROE de 189%. Fui conferir e o lucro dela estava em R$ 23,2 bi, mais que a receita da empresa no ano. Não fazia sentido.
+  * *O motivo da besteira:* No notebook 01 eu somava o DRE sem filtrar nada, e eram dois problemas juntos. Primeiro: o arquivo da CVM traz, para cada empresa e ano, a linha do ano atual (`ORDEM_EXERC == 'ÚLTIMO'`) e a do ano anterior como comparativo (`'PENÚLTIMO'`) — e eu somei as duas. Segundo: o cadastro de empresas que eu usava pra trazer o setor tinha `CD_CVM` repetido (107 empresas duplicadas, a Petrobras entre elas), e o merge dobrava as linhas dessas empresas. Juntando os dois, a Petrobras aparecia com R$ 592 bi de lucro em 2022, quando o resultado real foi R$ 188 bi — o valor da base batia quase exato com 2 × (ano + ano anterior).
+  * *O estrago:* Como o patrimônio líquido (notebook 02) já vinha certo — ele filtrava o `'ÚLTIMO'` e não fazia merge com cadastro —, o ROE saía inflado de 2× a 9× dependendo do ano. Isso contaminava os rankings de ROE, as médias por setor, os clusters e as features dos modelos.
+  * *Como resolvi:* No 01, tirei os `CD_CVM` duplicados do cadastro antes do merge, passei a filtrar só `ÚLTIMO`, fiquei só com a maior `VERSAO` de cada empresa/ano por segurança e padronizei a escala pela `ESCALA_MOEDA` antes de somar (o que também aposentou o `/1000` manual da Vivara e da Metisa no 06). No 02, apliquei o mesmo dedup de versão e a mesma padronização de escala. No 06, corrigi a coluna de patrimônio (que ia em milhares rotulada de bi), tirei a holding do mapeamento de tickers (a SUZANO HOLDING estava entrando no lugar da SUZANO S.A. no `SUZB3`) e congelei as cotações num csv próprio pra não depender do Yahoo a cada run. Depois disso os valores batem com os balanços divulgados.
+  * *O que ainda falta:* As acurácias dos modelos (82,76% e 62,07%) foram medidas com split aleatório em dados em painel e vão ser reavaliadas com split temporal; o dashboard do Metabase também precisa de refresh com a base corrigida.
 * **Cotação Ajustada vs Preço de Tela no Google:**
   * Quando olhei a Petrobras no meu dashboard a R$ 28,98 (fechamento 2025) e vi R$ 48,50 no Google em 2026, achei estranho. Aí lembrei que na análise quantitativa profissional usamos a **cotação ajustada por proventos** (o `yfinance` desconta os mais de R$ 200 bilhões de dividendos que a Petrobras pagou no período para refletir o retorno real do investidor).
 
@@ -140,10 +150,10 @@ graph TD
 #### 💡 A minha virada metodológica:
 * *Minha primeira tentativa:* Tentei clusterizar cada ano de cada empresa isoladamente. Foi uma bagunça: a mesma empresa mudava de cluster todo ano.
 * *A minha solução:* Agrupei a média histórica por `TICKER` (`df_empresa.groupby('TICKER')`), descobrindo 4 perfis corporativos muito claros na B3:
-  * **Cluster 0 (Blue Chips & Sólidas):** Lucros consistentes, ROE médio de ~27% e valorização média de +23% a.a. (ex: BB, Bradesco, Santander, Vivara).
-  * **Cluster 1 (Titãs da Bolsa):** Petrobras e Vale (escala massiva de dezenas de bilhões de lucro).
-  * **Cluster 2 (Campeãs de Super ROE):** Altíssima eficiência de capital (WEG, Ambev, Sabesp) com ROE médio de ~79% e retorno de +17% a.a.
-  * **Cluster 3 (Em Queda / Crise):** Empresas em estresse operacional (Magalu, Hapvida, Cosan) com rentabilidade comprimida e retorno médio de -19% a.a.
+  * **Cluster 0 (Blue Chips & Sólidas):** Bancos, Ambev e Vale, ROE médio de ~16% e valorização média de +16% a.a.
+  * **Cluster 1 (Sólidas em Alta):** O grupo grande, 26 empresas, ROE médio de ~18% e retorno de +23% a.a.
+  * **Cluster 2 (Em Queda / Varejo e Dívida):** Rentabilidade quase zerada (ROE ~1%) e retorno médio de -15% a.a. (Magalu, Hapvida, Cosan, siderurgia).
+  * **Cluster 3 (Titã Isolada):** Só a Petrobras, lucro médio de R$ 115 bi, ROE de ~30% e retorno de +37% a.a.
 
 ---
 
@@ -207,7 +217,7 @@ Construí uma aplicação web completa e interativa em Streamlit contendo:
 ---
 
 ## 🛠️ Stack Técnica
-* **Linguagem:** Python 3.14
+* **Linguagem:** Python 3.12
 * **Manipulação de Dados:** Pandas, NumPy, SQLite
 * **Visualização:** Streamlit, Plotly Express & Graph Objects, Matplotlib, Seaborn
 * **Machine Learning:** Scikit-Learn (Pipelines, StandardScaler, KMeans, RandomForestClassifier)

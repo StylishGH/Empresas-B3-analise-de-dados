@@ -1,15 +1,13 @@
-import streamlit as st
+from pathlib import Path
+
 import pandas as pd
-import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+import streamlit as st
 import yfinance as yf
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
-
-import os
-from pathlib import Path
+from sklearn.preprocessing import StandardScaler
 
 BASE_DIR = Path(__file__).resolve().parent
 LOGO_PATH = BASE_DIR / "assets" / "logo.png"
@@ -71,7 +69,7 @@ def obter_metricas_macro_atuais():
         d = yf.Ticker('USDBRL=X').history(period='1y')
         cotacao_dolar = float(d['Close'].iloc[-1])
         var_dolar = float(((cotacao_dolar / d['Close'].iloc[0]) - 1) * 100)
-    except Exception:
+    except Exception:  # noqa: BLE001 -- fallback intencional: qualquer falha na API vira valor padrao
         cotacao_dolar = 5.40
         var_dolar = 5.0
         
@@ -79,7 +77,7 @@ def obter_metricas_macro_atuais():
         b = yf.Ticker('^BVSP').history(period='1y')
         cotacao_ibov = float(b['Close'].iloc[-1])
         var_ibov = float(((cotacao_ibov / b['Close'].iloc[0]) - 1) * 100)
-    except Exception:
+    except Exception:  # noqa: BLE001 -- fallback intencional: qualquer falha na API vira valor padrao
         cotacao_ibov = 130000.0
         var_ibov = 10.0
         
@@ -239,8 +237,8 @@ with tab1:
         y=df_empresa['COTACAO_FINAL_ANO'],
         name="Cotação (R$)",
         mode="lines+markers",
-        line=dict(color="#2ca02c", width=3),
-        marker=dict(size=8),
+        line={"color": "#2ca02c", "width": 3},
+        marker={"size": 8},
         yaxis="y1"
     ))
     
@@ -249,16 +247,16 @@ with tab1:
         x=df_empresa['ANO'],
         y=df_empresa['ROE'] * 100,
         name="ROE (%)",
-        marker=dict(color="#1f77b4", opacity=0.4),
+        marker={"color": "#1f77b4", "opacity": 0.4},
         yaxis="y2"
     ))
     
     fig_hist.update_layout(
         title=f"Histórico Anual de Cotação e Rentabilidade ({ticker_selecionado})",
-        xaxis=dict(title="Ano", tickmode='linear', dtick=1),
-        yaxis=dict(title="Cotação (R$)", side="left", showgrid=False),
-        yaxis2=dict(title="ROE (%)", side="right", overlaying="y", showgrid=True),
-        legend=dict(x=0.01, y=0.99),
+        xaxis={"title": "Ano", "tickmode": 'linear', "dtick": 1},
+        yaxis={"title": "Cotação (R$)", "side": "left", "showgrid": False},
+        yaxis2={"title": "ROE (%)", "side": "right", "overlaying": "y", "showgrid": True},
+        legend={"x": 0.01, "y": 0.99},
         hovermode="x unified",
         height=450
     )
@@ -319,7 +317,7 @@ with tab2:
             x=emp_ponto['ROE_%'],
             y=emp_ponto['RETORNO_ANO_%'],
             mode="markers+text",
-            marker=dict(symbol="star", size=20, color="red", line=dict(width=2, color="black")),
+            marker={"symbol": "star", "size": 20, "color": "red", "line": {"width": 2, "color": "black"}},
             name=f"📍 {ticker_selecionado}",
             text=[f"  <b>{ticker_selecionado}</b>"],
             textposition="top right"
