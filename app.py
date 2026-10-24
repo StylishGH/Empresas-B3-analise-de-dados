@@ -9,11 +9,15 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 
 import os
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+LOGO_PATH = BASE_DIR / "assets" / "logo.png"
 
 # ==============================================================================
 # CONFIGURAÇÃO DA PÁGINA
 # ==============================================================================
-favicon = "assets/logo.png" if os.path.exists("assets/logo.png") else "📈"
+favicon = str(LOGO_PATH) if LOGO_PATH.exists() else "📈"
 
 st.set_page_config(
     page_title="B3 Analytics & Machine Learning",
@@ -28,10 +32,10 @@ st.set_page_config(
 @st.cache_data
 def carregar_dados():
     # 1. Dados consolidados CVM + Cotações
-    df = pd.read_csv("data/processed/dados_consolidados_b3.csv")
+    df = pd.read_csv(BASE_DIR / "data/processed/dados_consolidados_b3.csv")
     
     # 2. Dados dos Clusters do K-Means
-    df_clusters = pd.read_csv("data/processed/clusters_empresas.csv")
+    df_clusters = pd.read_csv(BASE_DIR / "data/processed/clusters_empresas.csv")
     
     # Garantir ordenação temporal por empresa
     df = df.sort_values(by=['TICKER', 'ANO']).reset_index(drop=True)
@@ -138,8 +142,8 @@ modelo_roe, modelo_acao, features_ml = treinar_modelos(df_completo)
 # ==============================================================================
 # BARRA LATERAL (FILTROS)
 # ==============================================================================
-if os.path.exists("assets/logo.png"):
-    st.sidebar.image("assets/logo.png", width=120)
+if LOGO_PATH.exists():
+    st.sidebar.image(str(LOGO_PATH), width=120)
 
 st.sidebar.title("🔍 Filtros de Análise")
 
