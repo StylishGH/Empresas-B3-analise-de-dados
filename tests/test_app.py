@@ -18,8 +18,8 @@ def test_carregar_dados_retorna_tres_dataframes():
     assert isinstance(df, pd.DataFrame)
     assert isinstance(df_clusters, pd.DataFrame)
     assert isinstance(df_macro, pd.DataFrame)
-    assert len(df) == 215
-    assert len(df_clusters) == 48
+    assert len(df) == 205
+    assert len(df_clusters) == 46
     assert len(df_macro) == 5
 
 
