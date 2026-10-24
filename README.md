@@ -207,7 +207,7 @@ Construí uma aplicação web completa e interativa em Streamlit contendo:
 ---
 
 ## 🛠️ Stack Técnica
-* **Linguagem:** Python 3.14
+* **Linguagem:** Python 3.12
 * **Manipulação de Dados:** Pandas, NumPy, SQLite
 * **Visualização:** Streamlit, Plotly Express & Graph Objects, Matplotlib, Seaborn
 * **Machine Learning:** Scikit-Learn (Pipelines, StandardScaler, KMeans, RandomForestClassifier)

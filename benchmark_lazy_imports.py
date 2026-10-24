@@ -1,6 +1,5 @@
-import time
-import sys
 import subprocess
+import sys
 
 TEST_MODULES = [
     "pandas",
@@ -14,7 +13,7 @@ TEST_MODULES = [
 ]
 
 print("=" * 65)
-print(f"🐍 PYTHON 3.15.0 - BENCHMARK DE LAZY IMPORTS (PEP 690)")
+print("🐍 PYTHON 3.15.0 - BENCHMARK DE LAZY IMPORTS (PEP 690)")
 print(f"Executável: {sys.executable}")
 print("=" * 65)
 
@@ -85,15 +84,15 @@ print(f"GLOBAL_LOADED:{loaded}")
 """
 
 print("\n[1/3] Medindo Import Tradicional (Eager)...")
-p1 = subprocess.run([sys.executable, "-c", code_eager], capture_output=True, text=True)
+p1 = subprocess.run([sys.executable, "-c", code_eager], capture_output=True, text=True, check=False)
 print(p1.stdout.strip())
 
 print("\n[2/3] Medindo Sintaxe Nativa Python 3.15 ('lazy import' / 'lazy from')...")
-p2 = subprocess.run([sys.executable, "-c", code_lazy_syntax], capture_output=True, text=True)
+p2 = subprocess.run([sys.executable, "-c", code_lazy_syntax], capture_output=True, text=True, check=False)
 print(p2.stdout.strip())
 
 print("\n[3/3] Medindo Flag Global (-X lazy_imports=all)...")
-p3 = subprocess.run([sys.executable, "-X", "lazy_imports=all", "-c", code_global_flag], capture_output=True, text=True)
+p3 = subprocess.run([sys.executable, "-X", "lazy_imports=all", "-c", code_global_flag], capture_output=True, text=True, check=False)
 print(p3.stdout.strip())
 
 print("\n" + "=" * 65)

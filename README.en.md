@@ -181,7 +181,7 @@ graph TD
 
 ## 🛠️ Technology Stack
 
-* **Programming Language:** Python 3.14
+* **Programming Language:** Python 3.12
 * **Data Processing & Analytics:** Pandas, NumPy, SQLite
 * **Visualization & Dashboarding:** Streamlit Cloud, Plotly Express & Graph Objects, Matplotlib, Seaborn
 * **Machine Learning & Modeling:** Scikit-Learn (Pipelines, StandardScaler, KMeans, RandomForestClassifier, Metrics)
