@@ -44,25 +44,22 @@ python -m streamlit run app.py
 
 Além do Streamlit, eu montei os mesmos indicadores no **Metabase**, a ferramenta
 de dashboards do dia a dia em vagas de Data Analyst: o dashboard
-**"B3 — Visão geral (2021–2025)"**, com 4 perguntas em SQL sobre o banco
-PostgreSQL carregado dos CSVs de `data/processed` (215 empresa-anos, 48
-clusters, 384 linhas de ROE).
-
-⚠️ Os números e o print abaixo são da base anterior à correção do lucro
-duplicado (ver o diário de bordo) — o dashboard precisa de refresh com os
-CSVs novos.
+**"B3 — Visão geral (2021–2025)"**, conectando diretamente no banco relacional
+PostgreSQL com 6 perguntas analíticas em SQL nativo (205 empresa-anos, 46
+empresas em clusters, 348 linhas de ROE).
 
 ![Dashboard B3 no Metabase](metabase/dashboard-b3.png)
 
-* **ROE médio por ano (2021–2025):** cai de 0,45 para 0,34, com pico de 0,51 em 2022.
-* **ROE médio por cluster:** o Cluster 1 (Titãs da Bolsa, PETR4/VALE3) lidera com folga.
-* **Top 10 empresas por ROE em 2024:** ENGIE no topo, seguida de VIBRA e CPFL.
-* **Lucro líquido total por setor:** Petróleo e Gás e Extração Mineral dominam o período.
+* **ROE médio por ano (2021–2025):** evolução histórica da rentabilidade na bolsa.
+* **Top 10 empresas por ROE em 2024:** CSN Mineração (44,1%), PRIO (39,7%) e ENGIE (35,0%) no topo.
+* **Média de ROE por cluster:** integração direta de Machine Learning com BI (Cluster 3: Titã Isolada Petrobras liderando).
+* **Lucro líquido acumulado por setor:** Petróleo e Gás (32,2%), Extração Mineral (17,4%) e Bancos (16,3%) dominam o volume financeiro.
+* **Maior retorno por setor (CTE + `DENSE_RANK`):** isola a empresa campeã de rentabilidade de cada setor.
+* **Variação YoY das Top da Bolsa (CTE + `LAG`):** dinâmica temporal ano a ano das grandes blue chips.
 
-As perguntas, o SQL de cada uma, o print e o passo a passo para reproduzir
-estão em [`metabase/`](metabase/). Nota honesta: a instância usada para o print
-era local, então o link público do Metabase local não é permanente — a prova
-durável é o print, as perguntas documentadas e o script de carga.
+🔗 **[Acesse o Dashboard Interativo ao Vivo no Metabase](https://accompanying-entirely-column-relaxation.trycloudflare.com/public/dashboard/bdbb04e0-2063-4ae3-9cc3-2592f882cd13)** *(disponível via túnel Cloudflare enquanto o ambiente local estiver ativo)*
+
+As perguntas, o script SQL analítico completo com DDL e carga (incluindo CTEs e Window Functions como `LAG`, `LEAD` e `DENSE_RANK`), o print em alta definição e o passo a passo para reproduzir estão em [`metabase/`](metabase/) (consulte [`queries_analiticas.sql`](metabase/queries_analiticas.sql)). Nota honesta: como instâncias corporativas de BI exigem servidores dedicados, a prova durável permanente no repositório é o print em alta resolução e o script SQL canônico.
 
 
 ---
