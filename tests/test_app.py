@@ -5,6 +5,7 @@ import pandas as pd
 from app import (
     carregar_dados,
     df_completo,
+    executar_auditoria_walk_forward,
     features_ml,
     modelo_acao,
     modelo_roe,
@@ -93,3 +94,15 @@ def test_metricas_macro_fallback_sem_rede(monkeypatch):
     assert metricas["ibov_pts"] == 130000.0
     assert metricas["selic_atual"] == 13.25
     assert metricas["ipca_atual"] == 4.6
+
+
+def test_executar_auditoria_walk_forward_estrutura_e_metricas():
+    res = executar_auditoria_walk_forward(df_completo)
+    assert len(res["df_folds"]) == 6  # 3 folds x 2 alvos (ROE_SOBE, ACAO_SOBE)
+    assert len(res["df_antes_depois"]) == 4
+    assert len(res["df_ablacao"]) == 4
+    assert len(res["matrizes_ablacao"]) == 4
+    assert len(res["df_ranking_2026"]) == 47
+    # Acurácia Walk-Forward do ROE (Com Cotação) deve ser ~62.10% (77 / 124)
+    acc_roe_wf = res["df_ablacao"].iloc[0]["Acuracia"]
+    assert abs(acc_roe_wf - (77 / 124)) < 1e-6
