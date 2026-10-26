@@ -155,36 +155,61 @@ graph TD
 ---
 
 ### 🤖 Etapa 3: Modelagem Preditiva com Machine Learning (Notebook 08)
-#### 💥 O tropeço que tive no Modelo Multiclasse (4 Classes):
+#### 💥 O tropeço inicial no Modelo Multiclasse (4 Classes):
 * *Minha ideia inicial:* Tentar prever diretamente em um único modelo os 4 quadrantes combinados:
   * 🟢 Crescente (ROE Sobe, Ação Sobe)
   * 🔴 Decrescente (ROE Cai, Ação Cai)
   * 🔵 Oportunidade (ROE Sobe, Ação Cai)
   * 🟡 Especulação (ROE Cai, Ação Sobe)
-* *O resultado:* A acurácia foi péssima (**~31%**). Como eu tinha ~116 linhas de dados anuais válidos, tentar prever 4 classes ao mesmo tempo gerou ruído demais para pouca amostra.
+* *O resultado:* A acurácia foi insatisfatória (**~31%**). Como a base tem granularidade anual, tentar prever 4 classes ao mesmo tempo gerou ruído excessivo para o volume amostral.
 
 #### 🧠 A tentação do Deep Learning (E por que decidi não usar):
-* Cheguei a pensar: *"Será que se eu usar uma Rede Neural com 2 neurônios na saída não resolve?"*. Mas percebi que em *Small Data Tabular* (~116 linhas), redes neurais sofrem de *overfitting* brutal (elas decoram o treino e erram tudo no teste). Árvores de decisão (**Random Forest**) são cientificamente superiores para esse tipo e volume de dado.
+* Cheguei a cogitar: *"Será que uma Rede Neural não resolve?"*. Mas percebi que em dados tabulares enxutos (*Small Data Tabular*), redes neurais sofrem de *overfitting* severo (decoram o treino e erram no teste). Modelos baseados em árvores de decisão (**Random Forest**) são metodologicamente superiores para esse perfil de dados.
 
-#### 🚀 A minha virada: 2 Modelos Especialistas + One-Hot Encoding:
+#### 🚀 A virada da arquitetura: 2 Modelos Especialistas + One-Hot Encoding:
 * **Dividi o problema em dois:**
   * **Modelo 1 (ROE):** Focado puramente em Fundamentos $\rightarrow$ O ROE vai subir? (0 ou 1)
   * **Modelo 2 (Ação):** Focado em Mercado $\rightarrow$ A cotação vai subir? (0 ou 1)
-  * E depois cruzei as respostas com lógica de negócios para formar os 4 quadrantes!
+  * E depois cruzei as respostas com lógica de negócios para formar os 4 quadrantes.
 * **Usei o K-Means como Feature:** Transformei os clusters do Notebook 07 em variáveis dummy (`CLUSTER_0.0`, `CLUSTER_1.0`, etc.) usando One-Hot Encoding para alimentar o Random Forest.
-
-#### 🔥 A maior virada de todas: O Salto Macroeconômico (De 51% para 83%):
-* *O mistério:* Mesmo com os dois modelos, a acurácia para prever se a ação subiria estava travada em **51.72%** (o mesmo que jogar uma moeda).
-* *A minha percepção:* Percebi que o modelo estava "cego". Entre 2021 e 2023, o Brasil viveu um choque violento de juros (**a Selic disparou de 2% para 13.75% a.a.**). Quando o juro vai a 14%, a bolsa inteira cai porque o dinheiro foge para a Renda Fixa. Uma empresa podia ter lucros crescentes, mas sua ação caía mesmo assim pela maré macroeconômica.
-* *A solução:* Criei variáveis macroeconômicas (`SELIC_ANO_%`, `VAR_SELIC_PP`, `IPCA_ANO_%`, `IBOV_RETORNO_%` e `DOLAR_VAR_%`) e juntei ao treino.
-* *O salto no teste:*
-  * **Previsão da Ação (`ACAO_SOBE`):** Saltou de 51.72% para **82.76%** (+31 pontos percentuais!).
-  * **Previsão do ROE (`ROE_SOBE`):** Subiu de 51.72% para **62.07%**!
-  * **Acerto do Cenário Combinado:** Saltou de 31.03% para **55.17%** (muito acima dos 25% de um chute aleatório)!
+* **Incorporação Macroeconômica:** Adicionei variáveis do ciclo econômico brasileiro (`SELIC_ANO_%`, `VAR_SELIC_PP`, `IPCA_ANO_%`, `IBOV_RETORNO_%` e `DOLAR_VAR_%`) para fornecer contexto de maré de juros ao modelo.
 
 ---
 
-### 🖥️ Etapa 4: O Produto Final (`app.py` com Streamlit)
+### 🔬 Etapa 4: Validação Temporal Rigorosa em Cascata — O Notebook 09 (Walk-Forward)
+
+No Notebook 08, a divisão tradicional de treino e teste com `train_test_split(..., test_size=0.25)` aleatório serviu como protótipo inicial, mas revelou um **erro metodológico clássico em finanças e séries temporais de dados em painel: o Vazamento Temporal (*Data Leakage*)**.
+
+#### ⚠️ Por que o `train_test_split` aleatório era problemático?
+1. **Violação da Flecha do Tempo:** O sorteio aleatório misturava observações futuras no treino para prever o passado (ex: treinar com a Petrobras de 2024 para adivinhar a Petrobras de 2022). No mercado real, ninguém opera olhando o retrovisor do futuro.
+2. **Dependência entre Linhas da Mesma Empresa:** Sortear linhas de uma mesma companhia ao longo dos anos quebra a premissa de independência estatística dos dados.
+
+#### 🛡️ A Solução Metodológica: Backtest em Cascata (*Walk-Forward Validation*)
+No **Notebook 09**, reconstruí todo o pipeline com validação estritamente temporal em **janela expansiva**, onde o modelo só aprende com o passado para projetar o futuro:
+
+$$\text{Treino: } \{t_1, \dots, t_k\} \longrightarrow \text{Teste: } \{t_{k+1}\}$$
+
+* **Fold 1:** Treina com **2021** $\longrightarrow$ Testa em **2022**
+* **Fold 2:** Treina com **2021 + 2022** $\longrightarrow$ Testa em **2023**
+* **Fold 3:** Treina com **2021 + 2022 + 2023** $\longrightarrow$ Testa em **2024**
+* **Fold 4:** Treina com **2021 + 2022 + 2023 + 2024** $\longrightarrow$ Testa em **2025**
+
+#### 📊 Resultados Reais Fora da Amostra: Fundamento vs. Especulação
+
+| Alvo | 2023 | 2024 | 2025 | Média Real |
+| :--- | :---: | :---: | :---: | :---: |
+| **`ROE_SOBE` (Fundamento Contábil)** | **60,0%** | **65,9%** | **58,1%** | **~61,3%** |
+| **`ACAO_SOBE` (Cotação de Mercado)** | **47,5%** | **31,7%** | **37,2%** | **~38,8%** |
+
+#### 💡 A Grande Lição Teórica (Benjamin Graham e Reversão à Média):
+* **O Fundamento é Previsível:** O ROE ($\text{Lucro} / \text{PL}$) reflete contratos reais, fábricas e gestão contínua — tem **inércia e alta razão sinal-ruído**. Por isso, a Random Forest manteve **61,3% de acerto consistente**, provando capacidade preditiva genuína.
+* **O Preço de Curto Prazo é Especulativo:** O mercado sofre com choques de regime macroeconômico (em 2023 o Ibovespa subiu +22%, em 2024 o Dólar disparou +27% e a bolsa caiu). Como dizia Benjamin Graham: *"No curto prazo o mercado é uma urna de votação (humor e especulação); no longo prazo é uma balança de precisão (lucro real)"*.
+* **Projeção para 2026 & *Turnaround*:** Ao rodar o modelo final sobre os balanços de 2025 para prever 2026, as empresas com maior probabilidade de alta no ROE foram justamente as menores ou em recuperação cíclica (*Allos*, *Auren*, *CSN*, *Hapvida*), refletindo com clareza o processo matemático de **Reversão à Média (*Mean Reversion*)**.
+* **Escopo ML Tabular vs. Quant:** O estudo foca em Machine Learning aplicado a balanços contábeis corporativos (CVM) com amostra de 5 anos anuais, e não em estratégias quantitativas intradiárias (*tick-by-tick*). Atingir mais de 60% de acurácia real fora da amostra com apenas 32 a 113 amostras de treino valida o rigor científico do pipeline.
+
+---
+
+### 🖥️ Etapa 5: O Produto Final (`app.py` com Streamlit)
 #### 🎯 O que eu entreguei:
 Construí uma aplicação web completa e interativa em Streamlit contendo:
 * **Visão Geral e Indicadores:** Gráficos interativos com Plotly de Cotação e ROE com duplo eixo, Lucro e Patrimônio.
@@ -208,7 +233,8 @@ Construí uma aplicação web completa e interativa em Streamlit contendo:
 | **01 a 05** | Extração CVM (DRE/BPP), saneamento de dados e SQL | Pandas, SQLite, tratamento de escala e regras contábeis |
 | **06** | Enriquecimento de Mercado | `yfinance`, download de cotações B3, cálculo de retornos e correção de anomalia de moeda (Vivara/Metisa) |
 | **07** | Agrupamento Não Supervisionado | `K-Means`, `StandardScaler`, Método do Cotovelo (Elbow) e Silhouette Score ($k=4$) |
-| **08** | Modelagem Preditiva com IA | `RandomForestClassifier`, Engenharia de Features Macroeconômicas (Selic, Ibov, IPCA, Dólar) |
+| **08** | Prototipagem Supervisionada | `RandomForestClassifier`, Engenharia de Features Macroeconômicas (Selic, Ibov, IPCA, Dólar) |
+| **09** | Validação Temporal em Cascata (Backtest) | Janela Expansiva (*Walk-Forward*), Avaliação sem *Data Leakage*, Previsões 2026 e Reversão à Média |
 | **app.py** | Produto Final / Web App | `Streamlit`, `Plotly`, `yfinance`, `@st.cache_data`, `@st.cache_resource` |
 
 ---
