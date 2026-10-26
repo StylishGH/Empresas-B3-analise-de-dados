@@ -185,27 +185,36 @@ No Notebook 08, a divisão tradicional de treino e teste com `train_test_split(.
 2. **Dependência entre Linhas da Mesma Empresa:** Sortear linhas de uma mesma companhia ao longo dos anos quebra a premissa de independência estatística dos dados.
 
 #### 🛡️ A Solução Metodológica: Backtest em Cascata (*Walk-Forward Validation*)
-No **Notebook 09**, reconstruí todo o pipeline com validação estritamente temporal em **janela expansiva**, onde o modelo só aprende com o passado para projetar o futuro:
+Como a base contábil possui balanços fechados de **2021 a 2025** ($T = 5$ anos), existem **4 transições anuais** ($t \to t+1$) com gabarito conhecido (`2021->2022`, `2022->2023`, `2023->2024` e `2024->2025`). A primeira transição (`2021->2022`, $32$ empresas) é a base histórica inicial obrigatória para o primeiro ajuste; portanto, executamos **exatamente 3 Folds de teste fora da amostra** ($N_{\text{teste total}} = 40 + 41 + 43 = 124$ observações):
 
-$$\text{Treino: } \{t_1, \dots, t_k\} \longrightarrow \text{Teste: } \{t_{k+1}\}$$
+* **Fold 1 (Alvo 2023):** Treina em `2021->2022` ($32$ obs.) $\longrightarrow$ Testa em `2022->2023` ($40$ obs.)
+* **Fold 2 (Alvo 2024):** Treina em `2021->2023` ($72$ obs.) $\longrightarrow$ Testa em `2023->2024` ($41$ obs.)
+* **Fold 3 (Alvo 2025):** Treina em `2021->2024` ($113$ obs.) $\longrightarrow$ Testa em `2024->2025` ($43$ obs.)
 
-* **Fold 1:** Treina com **2021** $\longrightarrow$ Testa em **2022**
-* **Fold 2:** Treina com **2021 + 2022** $\longrightarrow$ Testa em **2023**
-* **Fold 3:** Treina com **2021 + 2022 + 2023** $\longrightarrow$ Testa em **2024**
-* **Fold 4:** Treina com **2021 + 2022 + 2023 + 2024** $\longrightarrow$ Testa em **2025**
+#### 📊 Resultados por Fold com Baselines da Classe Majoritária, F1-Score e Matriz de Confusão
 
-#### 📊 Resultados Reais Fora da Amostra: Fundamento vs. Especulação
+| Alvo | Fold | Ano Alvo | $N_{\text{Treino}}$ | $N_{\text{Teste}}$ | Acurácia | Baseline Dummy (Treino) | Taxa Maj. (Teste) | Precisão | Recall | F1-Score | Matriz de Confusão |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **`ROE_SOBE`** | Fold 1 | **2023** | 32 | 40 | **65,00%** | 52,50% | 52,50% | 66,67% | 52,63% | **58,82%** | `[[16, 5], [9, 10]]` |
+| **`ROE_SOBE`** | Fold 2 | **2024** | 72 | 41 | **65,85%** | 51,22% | 51,22% | 63,64% | 70,00% | **66,67%** | `[[13, 8], [6, 14]]` |
+| **`ROE_SOBE`** | Fold 3 | **2025** | 113 | 43 | **55,81%** | 51,16% | 51,16% | 54,17% | 61,90% | **57,78%** | `[[11, 11], [8, 13]]` |
+| **`ACAO_SOBE`** | Fold 1 | **2023** | 32 | 40 | **45,00%** | 25,00% | 75,00% | 72,22% | 43,33% | **54,17%** | `[[5, 5], [17, 13]]` |
+| **`ACAO_SOBE`** | Fold 2 | **2024** | 72 | 41 | **34,15%** | 19,51% | 80,49% | 21,21% | 87,50% | **34,15%** | `[[7, 26], [1, 7]]` |
+| **`ACAO_SOBE`** | Fold 3 | **2025** | 113 | 43 | **34,88%** | 20,93% | 79,07% | 80,00% | 23,53% | **36,36%** | `[[7, 2], [26, 8]]` |
 
-| Alvo | 2023 | 2024 | 2025 | Média Real |
-| :--- | :---: | :---: | :---: | :---: |
-| **`ROE_SOBE` (Fundamento Contábil)** | **60,0%** | **65,9%** | **58,1%** | **~61,3%** |
-| **`ACAO_SOBE` (Cotação de Mercado)** | **47,5%** | **31,7%** | **37,2%** | **~38,8%** |
+#### ⚖️ Comparativo Lado a Lado na Mesma Base Corrigida: Antes (Split Aleatório) vs. Depois (Walk-Forward)
 
-#### 💡 A Grande Lição Teórica (Benjamin Graham e Reversão à Média):
-* **O Fundamento é Previsível:** O ROE ($\text{Lucro} / \text{PL}$) reflete contratos reais, fábricas e gestão contínua — tem **inércia e alta razão sinal-ruído**. Por isso, a Random Forest manteve **61,3% de acerto consistente**, provando capacidade preditiva genuína.
-* **O Preço de Curto Prazo é Especulativo:** O mercado sofre com choques de regime macroeconômico (em 2023 o Ibovespa subiu +22%, em 2024 o Dólar disparou +27% e a bolsa caiu). Como dizia Benjamin Graham: *"No curto prazo o mercado é uma urna de votação (humor e especulação); no longo prazo é uma balança de precisão (lucro real)"*.
-* **Projeção para 2026 & *Turnaround*:** Ao rodar o modelo final sobre os balanços de 2025 para prever 2026, as empresas com maior probabilidade de alta no ROE foram justamente as menores ou em recuperação cíclica (*Allos*, *Auren*, *CSN*, *Hapvida*), refletindo com clareza o processo matemático de **Reversão à Média (*Mean Reversion*)**.
-* **Escopo ML Tabular vs. Quant:** O estudo foca em Machine Learning aplicado a balanços contábeis corporativos (CVM) com amostra de 5 anos anuais, e não em estratégias quantitativas intradiárias (*tick-by-tick*). Atingir mais de 60% de acurácia real fora da amostra com apenas 32 a 113 amostras de treino valida o rigor científico do pipeline.
+| Alvo | Método de Validação | $N_{\text{Teste}}$ | Acurácia | IC 95% | Baseline Dummy (Treino) | Taxa Maj. (Teste) | Precisão | Recall | F1-Score | Matriz de Confusão |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **`ROE_SOBE`** | **ANTES:** Split Aleatório (*Com Leakage*) | 39 | 61,54% | *Amostra Viciada* | 56,41% | 56,41% | 58,33% | 41,18% | 48,28% | `[[17, 5], [10, 7]]` |
+| **`ROE_SOBE`** | **DEPOIS:** Walk-Forward (*3 Folds Sem Leakage*) | **124** | **62,10%** | **`[53,6%, 70,6%]`** | **51,61%** | **51,61%** | **60,66%** | **61,67%** | **61,16%** | `[[40, 24], [23, 37]]` |
+| **`ACAO_SOBE`** | **ANTES:** Split Aleatório (*Com Leakage*) | 39 | 76,92% | *Amostra Viciada* | 71,79% | 71,79% | 91,30% | 75,00% | 82,35% | `[[9, 2], [7, 21]]` |
+| **`ACAO_SOBE`** | **DEPOIS:** Walk-Forward (*3 Folds Sem Leakage*) | **124** | **37,90%** | **`[29,4%, 46,4%]`** | **21,77%** | **58,06%** | **45,90%** | **38,89%** | **42,11%** | `[[19, 33], [44, 28]]` |
+
+#### 💡 O que os Números Auditados Revelam:
+1. **A Queda da Ilusão em `ACAO_SOBE` (De 76,9% para 37,9%):** No split aleatório, o modelo parecia acertar `76,92%` (`F1 = 82,35%`) das cotações apenas porque misturava empresas do mesmo ano entre treino e teste (já sabendo o retorno anual do Ibovespa e que 71,8% da amostra subia naquele recorte). No *Walk-Forward* real sem vazamento, a acurácia cai para **37,90%** — pois cada ano teve uma reversão macroeconômica abrupta (Ibovespa $-11,9\%$ em 2021 $\to$ $+22,3\%$ em 2023 $\to$ $-10,4\%$ em 2024 $\to$ $+33,9\%$ em 2025).
+2. **Sinal Promissor em `ROE_SOBE` (62,1% vs. 51,6% da Baseline):** O fundamento contábil ($\text{ROE} = \text{Lucro} / \text{PL}$) bateu a classe majoritária em todos os 3 folds (`+12,5 p.p.` em 2023, `+14,6 p.p.` em 2024 e `+4,7 p.p.` em 2025), elevando o **F1-Score de 48,28% para 61,16%**. Com $N = 124$ observações de teste, o **Intervalo de Confiança de 95% é `[53,6%, 70,6%]`** — o que demonstra um **sinal preditivo promissor e consistente** acima de um baseline ingênuo, mantendo a devida cautela estatística frente ao tamanho amostral enxuto.
+3. **Auditoria dos Macros de 2025 e Projeção 2026:** Substituímos os antigos *placeholders* de 2025 pelos valores oficiais consolidados em 31/12/2025 (**BCB SGS 432/13522 e B3**: `Selic = 15,00%`, `IPCA = 4,26%`, `Ibovespa = +33,95%`, `Dólar = -11,36%`). O ranking projetado para 2026 destaca empresas com ROE comprimido em 2025 (*Allos*, *Auren*, *CSN*, *Vibra*, *Gerdau*), capturando o efeito de **Reversão à Média (*Turnaround*)**.
 
 ---
 

@@ -44,14 +44,14 @@ def carregar_dados():
     # Merge com os clusters
     df = df.merge(df_clusters[['TICKER', 'CLUSTER', 'PERFIL']], on='TICKER', how='left')
     
-    # 3. Tabela Macroeconômica Histórica
+    # 3. Tabela Macroeconômica Histórica (2021 a 2025 consolidados - BCB SGS e B3)
     dados_macro = {
         'ANO': [2021, 2022, 2023, 2024, 2025],
-        'SELIC_ANO_%':     [9.25,  13.75, 11.75, 12.25, 14.00],
-        'VAR_SELIC_PP':    [7.25,   4.50, -2.00,  0.50,  1.75],
-        'IPCA_ANO_%':      [10.06,  5.79,  4.62,  4.83,  4.50],
-        'IBOV_RETORNO_%':  [-11.93, 4.69, 22.28, -10.37, 0.00],
-        'DOLAR_VAR_%':     [7.47,  -5.32, -8.08, 27.35,  2.00]
+        'SELIC_ANO_%':     [9.25,  13.75, 11.75, 12.25, 15.00],
+        'VAR_SELIC_PP':    [7.25,   4.50, -2.00,  0.50,  2.75],
+        'IPCA_ANO_%':      [10.06,  5.79,  4.62,  4.83,  4.26],
+        'IBOV_RETORNO_%':  [-11.93, 4.69, 22.28, -10.37, 33.95],
+        'DOLAR_VAR_%':     [7.47,  -5.32, -8.08, 27.35, -11.36]
     }
     df_macro = pd.DataFrame(dados_macro)
     df = df.merge(df_macro, on='ANO', how='left')
